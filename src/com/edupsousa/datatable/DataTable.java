@@ -14,6 +14,7 @@ public class DataTable {
 
 	private LinkedHashMap<String, Integer> columnsTypes = new LinkedHashMap<String, Integer>();
 	private ArrayList<DataTableRow> rows = new ArrayList<DataTableRow>();
+	private InterfaceExport export;
 
 	public int columnsCount() {
 		return columnsTypes.size();
@@ -73,41 +74,14 @@ public class DataTable {
 	}
 
 	public String export(int format) {
-		DataTableRow row;
-		String output = "";
 		if (format == DataTable.FORMAT_CSV) {
-			for (String collumnName : columnsTypes.keySet()) {
-				output += collumnName + ";";
-			}
-			output += "\n";
-			for (int i = 0; i < this.rowsCount(); i++) {
-				row = this.getRow(i);
-				for (String collumnName : columnsTypes.keySet()) {
-					if (columnsTypes.get(collumnName) == DataTable.TYPE_STRING) {
-						output += "\"" + row.getValue(collumnName) + "\";";
-					} else {
-						output += row.getValue(collumnName) + ";";
-					}
-				}
-				output += "\n";
-			}
+			export = new CsvExport();
+
 		} else if (format == DataTable.FORMAT_HTML) {
-			output += "<table>\n<tr>";
-			for (String collumName : columnsTypes.keySet()) {
-				output += "<td>" + collumName + "</td>";
-			}
-			output += "</tr>\n";
-			for (int i = 0; i < this.rowsCount(); i++) {
-				output += "<tr>";
-				row = this.getRow(i);
-				for (String collumName : columnsTypes.keySet()) {
-					output += "<td>" + row.getValue(collumName) + "</td>";
-				}
-				output += "</tr>\n";
-			}
-			output += "</table>\n";
+			export = new HtmlExport();
 		}
-		return output;
+		
+		return export.export(this, columnsTypes);
 	}
 
 	public void insertRowAt(DataTableRow row, int index) {
@@ -136,7 +110,7 @@ public class DataTable {
 		}
 		return output;
 	}
-	
+
 	public DataTable filterNotEqual(String collumn, Object value) {
 		DataTable output = new DataTable();
 
@@ -171,25 +145,59 @@ public class DataTable {
 			output.addCollumn(collumName, columnsTypes.get(collumName));
 		}
 
-		for(int i = 0; i < this.rowsCount(); i++){
-			DataTableRow rowTemp= this.getRow(i);
+		for (int i = 0; i < this.rowsCount(); i++) {
+			DataTableRow rowTemp = this.getRow(i);
 			DataTableRow row;
 			int j = 0;
-			for(j = 0; j < output.rowsCount(); j++){
+			for (j = 0; j < output.rowsCount(); j++) {
 				row = output.getRow(j);
-				if((Integer) (rowTemp.getValue(collumn)) < (Integer) row.getValue(collumn)){
+				if ((Integer) (rowTemp.getValue(collumn)) <= (Integer) row
+						.getValue(collumn)) {
 					break;
 				}
 			}
 			row = output.createRow();
-			
+
 			for (String collumName : columnsTypes.keySet()) {
 				row.setValue(collumName, rowTemp.getValue(collumName));
 			}
-			
+
 			output.insertRowAt(row, j);
 		}
-		
+
+		return output;
+	}
+
+	public DataTable sortDescending(String collumn) {
+		if (columnsTypes.get(collumn) == TYPE_STRING) {
+			throw new ClassCastException("Only Integer columns can be sorted.");
+		}
+		DataTable output = new DataTable();
+
+		for (String collumName : columnsTypes.keySet()) {
+			output.addCollumn(collumName, columnsTypes.get(collumName));
+		}
+
+		for (int i = 0; i < this.rowsCount(); i++) {
+			DataTableRow rowTemp = this.getRow(i);
+			DataTableRow row;
+			int j = 0;
+			for (j = 0; j < output.rowsCount(); j++) {
+				row = output.getRow(j);
+				if ((Integer) (rowTemp.getValue(collumn)) >= (Integer) row
+						.getValue(collumn)) {
+					break;
+				}
+			}
+			row = output.createRow();
+
+			for (String collumName : columnsTypes.keySet()) {
+				row.setValue(collumName, rowTemp.getValue(collumName));
+			}
+
+			output.insertRowAt(row, j);
+		}
+
 		return output;
 	}
 }

@@ -169,7 +169,7 @@ public class DataTableTest {
 			row = filteredTable.getRow(i);
 			assertEquals((i * 2) + 1, row.getValue("id"));
 			assertNotEquals("even", row.getValue("class"));
-			System.out.println(i + " | " + row.getValue("id") + " | "+row.getValue("class"));
+			//System.out.println(i + " | " + row.getValue("id") + " | "+row.getValue("class"));
 		}
 	}
 	
@@ -190,7 +190,30 @@ public class DataTableTest {
 		for (int i = 0; i < 5; i++) {
 			row = sortedTable.getRow(i);
 			assertEquals(4-i, row.getValue("id"));
-			assertEquals(i, row.getValue("number"));						
+			assertEquals(i, row.getValue("number"));
+			//System.out.println(row.getValue("id") + " | " + row.getValue("number"));
+		}
+	}
+	
+	@Test
+	public void sortRowsDescending() {
+		DataTableRow row;
+		dt.addCollumn("id", DataTable.TYPE_INT);
+		dt.addCollumn("number", DataTable.TYPE_INT);
+		
+		for (int i = 0; i < 5; i++) {
+			row = dt.createRow();
+			row.setValue("id", i);
+			row.setValue("number", i);
+			dt.insertRow(row);
+		}
+		
+		DataTable sortedTable = dt.sortDescending("number");
+		for (int i = 0; i < 5; i++) {
+			row = sortedTable.getRow(i);
+			assertEquals(4-i, row.getValue("id"));
+			assertEquals(4-i, row.getValue("number"));	
+			//System.out.println(row.getValue("id") + " | " + row.getValue("number"));
 		}
 	}
 	
@@ -200,11 +223,17 @@ public class DataTableTest {
 		
 		try {
 			dt.sortAscending("name");
+			fail();
 		} catch (ClassCastException e) {
 			assertEquals("Only Integer columns can be sorted.", e.getMessage());
-			return;
 		}
-		fail();
+		
+		try {
+			dt.sortDescending("name");
+			fail();
+		} catch (ClassCastException e) {
+			assertEquals("Only Integer columns can be sorted.", e.getMessage());
+		}
+		
 	}
-	
 }
