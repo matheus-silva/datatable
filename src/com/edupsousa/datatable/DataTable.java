@@ -8,9 +8,12 @@ public class DataTable {
 
 	public static final int TYPE_INT = 0;
 	public static final int TYPE_STRING = 1;
-
 	public static final int FORMAT_CSV = 0;
 	public static final int FORMAT_HTML = 1;
+	private final boolean ASCENDING = false;
+	private final boolean DESCENDING = true;
+	private final boolean EQUAL = true;
+	private final boolean NOT_EQUAL = false;
 
 	private LinkedHashMap<String, Integer> columnsTypes = new LinkedHashMap<String, Integer>();
 	private ArrayList<DataTableRow> rows = new ArrayList<DataTableRow>();
@@ -80,7 +83,7 @@ public class DataTable {
 		} else if (format == DataTable.FORMAT_HTML) {
 			export = new HtmlExport();
 		}
-		
+
 		return export.export(this, columnsTypes);
 	}
 
@@ -89,44 +92,25 @@ public class DataTable {
 	}
 
 	public DataTable filterEqual(String collumn, Object value) {
-		DataTable output = new DataTable();
-
-		for (String collumName : columnsTypes.keySet()) {
-			output.addCollumn(collumName, columnsTypes.get(collumName));
-		}
-
-		for (int i = 0; i < this.rowsCount(); i++) {
-			DataTableRow rowTemp = this.getRow(i);
-
-			if (Objects.equals(rowTemp.getValue(collumn), value)) {
-				DataTableRow row = output.createRow();
-
-				for (String collumName : columnsTypes.keySet()) {
-					row.setValue(collumName, rowTemp.getValue(collumName));
-				}
-
-				output.insertRow(row);
-			}
-		}
-		return output;
+		return equal(collumn, value, true);
 	}
 
 	public DataTable filterNotEqual(String collumn, Object value) {
+		return equal(collumn, value, false);
+	}
+
+	private DataTable equal(String collumn, Object value, boolean equal) {
 		DataTable output = new DataTable();
 
-		for (String collumName : columnsTypes.keySet()) {
-			output.addCollumn(collumName, columnsTypes.get(collumName));
-		}
+		this.copyColumnsType(output);
 
 		for (int i = 0; i < this.rowsCount(); i++) {
 			DataTableRow rowTemp = this.getRow(i);
 
-			if (!Objects.equals(rowTemp.getValue(collumn), value)) {
+			if (equal == objectComparator(rowTemp, collumn, value)) {
 				DataTableRow row = output.createRow();
 
-				for (String collumName : columnsTypes.keySet()) {
-					row.setValue(collumName, rowTemp.getValue(collumName));
-				}
+				this.copyDataTableRow(row, rowTemp);
 
 				output.insertRow(row);
 			}
@@ -134,16 +118,26 @@ public class DataTable {
 		return output;
 	}
 
+	private boolean objectComparator(DataTableRow rowTemp, String collumn,
+			Object value) {
+		return Objects.equals(rowTemp.getValue(collumn), value);
+	}
+
 	public DataTable sortAscending(String collumn) {
+		return sort(collumn, ASCENDING);
+	}
+
+	public DataTable sortDescending(String collumn) {
+		return sort(collumn, DESCENDING);
+	}
+
+	private DataTable sort(String collumn, boolean equal) {
 		if (columnsTypes.get(collumn) == TYPE_STRING) {
 			throw new ClassCastException("Only Integer columns can be sorted.");
 		}
-
 		DataTable output = new DataTable();
 
-		for (String collumName : columnsTypes.keySet()) {
-			output.addCollumn(collumName, columnsTypes.get(collumName));
-		}
+		this.copyColumnsType(output);
 
 		for (int i = 0; i < this.rowsCount(); i++) {
 			DataTableRow rowTemp = this.getRow(i);
@@ -151,16 +145,13 @@ public class DataTable {
 			int j = 0;
 			for (j = 0; j < output.rowsCount(); j++) {
 				row = output.getRow(j);
-				if ((Integer) (rowTemp.getValue(collumn)) <= (Integer) row
-						.getValue(collumn)) {
+				if (equal == biggerThan(collumn, rowTemp, row)) {
 					break;
 				}
 			}
 			row = output.createRow();
 
-			for (String collumName : columnsTypes.keySet()) {
-				row.setValue(collumName, rowTemp.getValue(collumName));
-			}
+			this.copyDataTableRow(row, rowTemp);
 
 			output.insertRowAt(row, j);
 		}
@@ -168,36 +159,21 @@ public class DataTable {
 		return output;
 	}
 
-	public DataTable sortDescending(String collumn) {
-		if (columnsTypes.get(collumn) == TYPE_STRING) {
-			throw new ClassCastException("Only Integer columns can be sorted.");
-		}
-		DataTable output = new DataTable();
+	private boolean biggerThan(String collumn, DataTableRow rowTemp,
+			DataTableRow row) {
+		return (Integer) (rowTemp.getValue(collumn)) >= (Integer) row
+				.getValue(collumn);
+	}
 
+	private void copyColumnsType(DataTable output) {
 		for (String collumName : columnsTypes.keySet()) {
 			output.addCollumn(collumName, columnsTypes.get(collumName));
 		}
+	}
 
-		for (int i = 0; i < this.rowsCount(); i++) {
-			DataTableRow rowTemp = this.getRow(i);
-			DataTableRow row;
-			int j = 0;
-			for (j = 0; j < output.rowsCount(); j++) {
-				row = output.getRow(j);
-				if ((Integer) (rowTemp.getValue(collumn)) >= (Integer) row
-						.getValue(collumn)) {
-					break;
-				}
-			}
-			row = output.createRow();
-
-			for (String collumName : columnsTypes.keySet()) {
-				row.setValue(collumName, rowTemp.getValue(collumName));
-			}
-
-			output.insertRowAt(row, j);
+	private void copyDataTableRow(DataTableRow row, DataTableRow rowTemp) {
+		for (String collumName : columnsTypes.keySet()) {
+			row.setValue(collumName, rowTemp.getValue(collumName));
 		}
-
-		return output;
 	}
 }

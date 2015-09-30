@@ -3,7 +3,7 @@ package com.edupsousa.datatable;
 import java.util.LinkedHashMap;
 
 public class DataTableRow {
-	
+
 	private DataTable table;
 	private LinkedHashMap<String, Object> values = new LinkedHashMap<String, Object>();
 
