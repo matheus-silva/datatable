@@ -136,6 +136,29 @@ public class DataTable {
 		}
 		return output;
 	}
+	
+	public DataTable filterNotEqual(String collumn, Object value) {
+		DataTable output = new DataTable();
+
+		for (String collumName : columnsTypes.keySet()) {
+			output.addCollumn(collumName, columnsTypes.get(collumName));
+		}
+
+		for (int i = 0; i < this.rowsCount(); i++) {
+			DataTableRow rowTemp = this.getRow(i);
+
+			if (!Objects.equals(rowTemp.getValue(collumn), value)) {
+				DataTableRow row = output.createRow();
+
+				for (String collumName : columnsTypes.keySet()) {
+					row.setValue(collumName, rowTemp.getValue(collumName));
+				}
+
+				output.insertRow(row);
+			}
+		}
+		return output;
+	}
 
 	public DataTable sortAscending(String collumn) {
 		if (columnsTypes.get(collumn) == TYPE_STRING) {
